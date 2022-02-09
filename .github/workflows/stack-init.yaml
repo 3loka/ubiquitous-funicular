@@ -1,0 +1,85 @@
+name: Publish to NPM
+on:
+  workflow_dispatch:
+    inputs:
+      NODE_VERSION:
+        required: true
+        description: 'nodejs version to be used'
+      NPM_PACKAGE_NAME:
+        required: true
+        description: 'npm package name'
+      NPM_PACKAGE_DESCRIPTION:
+        required: true
+        description: 'npm package description'
+      NPM_AUTHOR:
+        required: true
+        description: 'npm package author'
+      NPM_LICENSE:
+        required: true
+        description: 'npm package license'
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+          
+      - name: use node.js ${{ github.event.inputs.NODE_VERSION }} 
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ github.event.inputs.NODE_VERSION }}
+          registry-url: https://registry.npmjs.org/
+          
+      - name: Configure git
+        run: |
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+          git config --global user.name "${{ github.actor }}"
+          git remote set-url origin https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          
+      - name: cleanups in case of rerun
+        run: |
+          rm -f  package.json
+          rm -f  package-lock.json
+          rm -f .gitignore
+          rm -f .npmignore
+          rm -rf src
+          rm -rf tests
+        
+      - uses: microsoft/variable-substitution@v1 
+        with:
+            files: '.github/repo-files/package.json'
+        env:
+            name: ${{ github.event.inputs.NPM_PACKAGE_NAME }} 
+            description: ${{ github.event.inputs.NPM_PACKAGE_DESCRIPTION }} 
+            author: ${{ github.event.inputs.NPM_AUTHOR }} 
+            license: ${{ github.event.inputs.NPM_LICENSE }} 
+            
+      - name: move to root folder
+        run: |
+          cp .github/repo-files/package.json package.json
+          cp .github/repo-files/package.json package-lock.json
+          cp .github/repo-files/.gitignore .gitignore
+          cp .github/repo-files/.npmignore .npmignore
+          cp -r .github/repo-files/src .
+          cp -r .github/repo-files/tests .
+          
+      - name: persist NPM version
+        run: |
+          echo ${{ github.event.inputs.NODE_VERSION }} > .nvmrc
+          
+      - name: Commit generated code and initialize workflows
+        run: |
+          git add .
+          git commit -m "Bootstrapping your npm project"
+          git push origin -u main
+
+      - name: Install dependencies and build 🔧
+        run: npm install && npm run build
+        
+      - name: Publish package on NPM 📦
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

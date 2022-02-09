@@ -1,0 +1,31 @@
+{
+  "name": "my-npm-package",
+  "version": "1.0.0",
+  "description": "An example package for a tutorial.",
+  "keywords": [
+    "example",
+    "package",
+    "tutorial"
+  ],
+  "homepage": "https://github.com/UserName/package-name",
+  "bugs": {
+    "url": "https://github.com/UserName/package-name/issues",
+    "email": "your-public-email@example.com"
+  },
+  "main": "index.js",
+  "scripts": {
+    "test": "test.index.js",
+    "build": "echo 'TODO'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/UserName/package-name.git"
+  },
+  "author": "3loka <your-public-email@example.com> (your-website.com)",
+  "license": "MIT",
+  "private": false,
+  "engines": {
+    "node": ">=6.0.0"
+  },
+  "engineStrict": true
+}
